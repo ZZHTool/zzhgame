@@ -317,6 +317,41 @@
                     display: none;
                 }
 
+        .end-btn {
+            background: linear-gradient(135deg, #FF6B9D, #F5A623);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .end-btn::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+                transition: all 0.6s;
+            }
+
+            .end-btn:hover::before {
+                left: 100%;
+            }
+
+            .end-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            }
+
         /* 进度显示 */
         .progress-section {
             text-align: center;
@@ -582,7 +617,7 @@
             padding: 30px;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
+            max-width: 600px;
             width: 90%;
             max-height: 80vh;
             overflow-y: auto;
@@ -612,6 +647,70 @@
             color: #666;
             margin-bottom: 20px;
         }
+
+        /* 单元选择区域 */
+        .unit-selection {
+            margin-bottom: 20px;
+        }
+
+        .unit-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+            .unit-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            }
+
+        .unit-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .unit-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .unit-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2C3E50;
+        }
+
+        .unit-count {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #4A90E2, #7ED321);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+            .edit-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 10px rgba(74, 144, 226, 0.4);
+            }
 
         .import-textarea {
             width: 100%;
@@ -678,6 +777,60 @@
             .modal-btn:hover {
                 transform: translateY(-2px);
                 box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+
+        /* 编辑单元对话框 */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .edit-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .edit-modal.show .edit-modal-content {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .edit-textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #4A90E2;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+            .edit-textarea:focus {
+                outline: none;
+                border-color: #7ED321;
+                box-shadow: 0 0 0 3px rgba(126, 211, 33, 0.2);
             }
 
         /* 结果对话框 */
@@ -779,6 +932,10 @@
             .progress-bar {
                 width: 250px;
             }
+
+            .modal-content, .edit-modal-content {
+                max-width: 90%;
+            }
         }
     </style>
 </head>
@@ -819,7 +976,7 @@
 
     <!-- 开始按钮区域 -->
     <section class="start-section">
-        <button class="start-btn" id="startBtn" onclick="startGame()">开始游戏</button>
+        <button class="start-btn" id="startBtn" onclick="toggleGame()">开始游戏</button>
     </section>
 
     <!-- 进度显示 -->
@@ -848,16 +1005,61 @@
             <div class="modal-header">
                 <h2 class="modal-title">导入课堂知识</h2>
                 <p class="modal-instructions">
-                    请输入知识配对，每行一对，用逗号分隔<br>
-                    例如：苹果,水果 北京,中国首都
+                    请选择要导入的知识单元或手动输入知识配对
                 </p>
             </div>
+
+            <div class="unit-selection">
+                <div class="unit-item">
+                    <div class="unit-info">
+                        <input type="checkbox" class="unit-checkbox" id="unit1Checkbox" checked>
+                        <div>
+                            <div class="unit-name">Unit1</div>
+                            <div class="unit-count">11 对单词</div>
+                        </div>
+                    </div>
+                    <button class="edit-btn" onclick="editUnit('unit1')">→</button>
+                </div>
+                <div class="unit-item">
+                    <div class="unit-info">
+                        <input type="checkbox" class="unit-checkbox" id="unit2Checkbox" checked>
+                        <div>
+                            <div class="unit-name">Unit2</div>
+                            <div class="unit-count">2 对单词</div>
+                        </div>
+                    </div>
+                    <button class="edit-btn" onclick="editUnit('unit2')">→</button>
+                </div>
+            </div>
+
+            <p class="modal-instructions">
+                或手动输入知识配对，每行一对，用逗号分隔<br>
+                例如：苹果,水果 北京,中国首都
+            </p>
             <textarea class="import-textarea"
                       id="importTextarea"
                       placeholder="请输入知识配对内容...&#10;例如：&#10;苹果,水果&#10;北京,中国首都&#10;1+1,2&#10;水的化学式,H2O"></textarea>
             <div class="modal-buttons">
                 <button class="modal-btn primary" onclick="importKnowledge()">确定导入</button>
                 <button class="modal-btn secondary" onclick="hideImportModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑单元对话框 -->
+    <div class="edit-modal" id="editModal">
+        <div class="edit-modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="editModalTitle">编辑 Unit1</h2>
+                <p class="modal-instructions">
+                    每行一对，用逗号分隔，修改后点击保存
+                </p>
+            </div>
+            <textarea class="edit-textarea"
+                      id="editTextarea"></textarea>
+            <div class="modal-buttons">
+                <button class="modal-btn primary" onclick="saveUnit()">保存</button>
+                <button class="modal-btn secondary" onclick="hideEditModal()">返回</button>
             </div>
         </div>
     </div>
@@ -884,11 +1086,54 @@
             isGameActive: false
         };
 
+        // 默认单元数据
+        const defaultUnits = {
+            unit1: [
+                ['golden', '金色的'],
+                ['crown', '王冠'],
+                ['Olympics', '奥运会'],
+                ['agreement', '同意'],
+                ['confirmation', '证实'],
+                ['pot', '罐'],
+                ['doubt', '对……无把握'],
+                ['real', '真的'],
+                ['truth', '真相'],
+                ['seem', '好像'],
+                ['solve', '解决']
+            ],
+            unit2: [
+                ['mind', '聪明人'],
+                ['astronomer', '天文学家']
+            ]
+        };
+
+        // 当前编辑的单元
+        let currentEditingUnit = '';
+
         // 初始化游戏
         function initGame() {
             updateTimer();
             updateProgress();
-            // 不加载默认知识，等待用户导入
+            // 默认加载两个单元
+            loadDefaultUnits();
+        }
+
+        // 加载默认单元
+        function loadDefaultUnits() {
+            gameState.knowledgePairs = [...defaultUnits.unit1, ...defaultUnits.unit2];
+            gameState.totalPairs = gameState.knowledgePairs.length;
+            updateProgress();
+        }
+
+        // 切换游戏状态
+        function toggleGame() {
+            if (gameState.isGameActive) {
+                // 结束游戏
+                endGame(false, true);
+            } else {
+                // 开始游戏
+                startGame();
+            }
         }
 
         // 开始游戏
@@ -903,8 +1148,8 @@
             }
 
             gameState.isGameActive = true;
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('startBtn').textContent = '游戏中...';
+            document.getElementById('startBtn').className = 'end-btn';
+            document.getElementById('startBtn').textContent = '结束游戏';
 
             // 隐藏导入按钮
             document.getElementById('importSection').style.display = 'none';
@@ -927,7 +1172,7 @@
                 }
 
                 if (gameState.timeLeft <= 0) {
-                    endGame(false);
+                    endGame(false, false);
                 }
             }, 1000);
         }
@@ -1029,7 +1274,7 @@
 
                     // 检查游戏是否完成
                     if (gameState.matchedPairs === gameState.totalPairs) {
-                        endGame(true);
+                        endGame(true, false);
                     }
                 }
             });
@@ -1048,7 +1293,7 @@
         }
 
         // 结束游戏
-        function endGame(success) {
+        function endGame(success, isUserEnded) {
             gameState.isGameActive = false;
             if (gameState.timer) {
                 clearInterval(gameState.timer);
@@ -1061,7 +1306,13 @@
             // 显示导入按钮
             document.getElementById('importSection').style.display = 'block';
 
-            showResultModal(success);
+            // 恢复开始按钮
+            document.getElementById('startBtn').className = 'start-btn';
+            document.getElementById('startBtn').textContent = '开始游戏';
+
+            if (!isUserEnded) {
+                showResultModal(success);
+            }
         }
 
         // 显示结果对话框
@@ -1116,7 +1367,7 @@
                 resultModal.style.display = 'none';
             }, 300);
 
-            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').className = 'start-btn';
             document.getElementById('startBtn').textContent = '开始游戏';
 
             // 移除警告动画
@@ -1175,7 +1426,6 @@
             setTimeout(() => {
                 modal.classList.add('show');
             }, 10);
-            document.getElementById('importTextarea').focus();
         }
 
         // 隐藏导入对话框
@@ -1187,13 +1437,44 @@
             }, 300);
         }
 
-        // 导入知识
-        function importKnowledge() {
-            const textarea = document.getElementById('importTextarea');
+        // 显示编辑单元对话框
+        function editUnit(unit) {
+            currentEditingUnit = unit;
+            const modal = document.getElementById('editModal');
+            const title = document.getElementById('editModalTitle');
+            const textarea = document.getElementById('editTextarea');
+
+            title.textContent = `编辑 ${unit.toUpperCase()}`;
+
+            // 填充当前单元内容
+            let content = '';
+            defaultUnits[unit].forEach(pair => {
+                content += `${pair[0]},${pair[1]}\n`;
+            });
+            textarea.value = content.trim();
+
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+
+        // 隐藏编辑单元对话框
+        function hideEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // 保存单元内容
+        function saveUnit() {
+            const textarea = document.getElementById('editTextarea');
             const text = textarea.value.trim();
 
             if (!text) {
-                alert('请输入知识配对内容！');
+                alert('单元内容不能为空！');
                 return;
             }
 
@@ -1212,12 +1493,60 @@
                 return;
             }
 
+            // 更新单元数据
+            defaultUnits[currentEditingUnit] = newPairs;
+
+            // 更新单元计数显示
+            if (currentEditingUnit === 'unit1') {
+                document.querySelector('.unit-item:nth-child(1) .unit-count').textContent = `${newPairs.length} 对单词`;
+            } else {
+                document.querySelector('.unit-item:nth-child(2) .unit-count').textContent = `${newPairs.length} 对单词`;
+            }
+
+            hideEditModal();
+
+            // 显示成功提示
+            alert(`成功更新 ${currentEditingUnit.toUpperCase()}！`);
+        }
+
+        // 导入知识
+        function importKnowledge() {
+            const unit1Checked = document.getElementById('unit1Checkbox').checked;
+            const unit2Checked = document.getElementById('unit2Checkbox').checked;
+            const manualText = document.getElementById('importTextarea').value.trim();
+
+            let newPairs = [];
+
+            // 添加选中的单元
+            if (unit1Checked) {
+                newPairs = [...newPairs, ...defaultUnits.unit1];
+            }
+            if (unit2Checked) {
+                newPairs = [...newPairs, ...defaultUnits.unit2];
+            }
+
+            // 添加手动输入的内容
+            if (manualText) {
+                const lines = manualText.split('\n').filter(line => line.trim());
+                lines.forEach(line => {
+                    const parts = line.split(',').map(part => part.trim()).filter(part => part);
+                    if (parts.length >= 2) {
+                        newPairs.push([parts[0], parts[1]]);
+                    }
+                });
+            }
+
+            if (newPairs.length === 0) {
+                alert('请至少选择一个单元或输入知识配对内容！');
+                return;
+            }
+
             gameState.knowledgePairs = newPairs;
             gameState.totalPairs = newPairs.length;
             gameState.matchedPairs = 0;
 
             hideImportModal();
-            textarea.value = '';
+            document.getElementById('importTextarea').value = '';
 
             // 清空气泡，等待开始游戏
             document.getElementById('gameBoard').innerHTML = '';
@@ -1241,10 +1570,14 @@
         // 点击模态框外部关闭
         window.onclick = function (event) {
             const importModal = document.getElementById('importModal');
+            const editModal = document.getElementById('editModal');
             const resultModal = document.getElementById('resultModal');
 
             if (event.target === importModal) {
                 hideImportModal();
+            }
+            if (event.target === editModal) {
+                hideEditModal();
             }
             if (event.target === resultModal) {
                 resetGame();
@@ -1259,6 +1592,7 @@
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
                     hideImportModal();
+                    hideEditModal();
                 }
                 if (event.key === 'Enter' && event.ctrlKey) {
                     showImportModal();
