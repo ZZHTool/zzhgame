@@ -241,6 +241,45 @@
             75% { transform: translateX(10px); }
         }
 
+        /* 开始按钮 */
+        .start-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, #4A90E2, #7ED321);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .start-btn:disabled {
+            background: linear-gradient(135deg, #cccccc, #999999);
+            cursor: not-allowed;
+            animation: none;
+            transform: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
         /* 导入按钮 */
         .import-section {
             position: fixed;
@@ -261,13 +300,6 @@
             cursor: pointer;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
 
         .import-btn:hover {
@@ -508,9 +540,14 @@
         </div>
     </section>
 
+    <!-- 开始按钮区域 -->
+    <section class="start-section">
+        <button class="start-btn" id="startBtn" onclick="startGame()">开始游戏</button>
+    </section>
+
     <!-- 进度显示 -->
     <section class="progress-section">
-        <div class="progress-text">剩余配对: <span id="remainingPairs">8</span> 对</div>
+        <div class="progress-text">剩余配对: <span id="remainingPairs">0</span> 对</div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill" style="width: 0%"></div>
         </div>
@@ -519,28 +556,12 @@
     <!-- 游戏区域 -->
     <main class="game-container">
         <div class="game-board" id="gameBoard">
-            <!-- 示例气泡框 -->
-            <div class="bubble" data-pair="1">语文</div>
-            <div class="bubble" data-pair="1">数学</div>
-            <div class="bubble" data-pair="2">英语</div>
-            <div class="bubble" data-pair="2">科学</div>
-            <div class="bubble" data-pair="3">历史</div>
-            <div class="bubble" data-pair="3">地理</div>
-            <div class="bubble" data-pair="4">音乐</div>
-            <div class="bubble" data-pair="4">美术</div>
-            <div class="bubble" data-pair="5">体育</div>
-            <div class="bubble" data-pair="5">品德</div>
-            <div class="bubble" data-pair="6">物理</div>
-            <div class="bubble" data-pair="6">化学</div>
-            <div class="bubble" data-pair="7">生物</div>
-            <div class="bubble" data-pair="7">政治</div>
-            <div class="bubble" data-pair="8">信息技术</div>
-            <div class="bubble" data-pair="8">劳动技术</div>
+            <!-- 气泡框将在游戏开始后动态生成 -->
         </div>
     </main>
 
     <!-- 导入按钮 -->
-    <section class="import-section">
+    <section class="import-section" id="importSection">
         <button class="import-btn" onclick="showImportModal()">📚 导入知识</button>
     </section>
 
@@ -582,7 +603,7 @@
             knowledgePairs: [],
             selectedBubble: null,
             matchedPairs: 0,
-            totalPairs: 8,
+            totalPairs: 0,
             timeLeft: 300, // 5分钟
             timer: null,
             isGameActive: false
@@ -592,22 +613,43 @@
         function initGame() {
             updateTimer();
             updateProgress();
-            loadDefaultKnowledge();
+            // 不加载默认知识，等待用户导入
         }
 
-        // 加载默认知识
-        function loadDefaultKnowledge() {
-            gameState.knowledgePairs = [
-                ['语文', '数学'],
-                ['英语', '科学'],
-                ['历史', '地理'],
-                ['音乐', '美术'],
-                ['体育', '品德'],
-                ['物理', '化学'],
-                ['生物', '政治'],
-                ['信息技术', '劳动技术']
-            ];
+        // 开始游戏
+        function startGame() {
+            if (gameState.isGameActive) return;
+            
+            // 检查是否有知识对
+            if (gameState.knowledgePairs.length === 0) {
+                alert('请先导入知识点！');
+                showImportModal();
+                return;
+            }
+            
+            gameState.isGameActive = true;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('startBtn').textContent = '游戏中...';
+            
+            // 隐藏导入按钮
+            document.getElementById('importSection').style.display = 'none';
+            
+            const minutes = parseInt(document.getElementById('minutesInput').value) || 5;
+            const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+            gameState.timeLeft = minutes * 60 + seconds;
+            
+            // 创建气泡
             createBubbles();
+            
+            // 开始计时
+            gameState.timer = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimer();
+                
+                if (gameState.timeLeft <= 0) {
+                    endGame(false);
+                }
+            }, 1000);
         }
 
         // 创建气泡框
@@ -646,9 +688,7 @@
 
         // 选择气泡框
         function selectBubble(bubble) {
-            if (!gameState.isGameActive) {
-                startGame();
-            }
+            if (!gameState.isGameActive) return;
             
             if (bubble.classList.contains('matched')) return;
             
@@ -727,25 +767,6 @@
             }, 500);
         }
 
-        // 开始游戏
-        function startGame() {
-            if (gameState.isGameActive) return;
-            
-            gameState.isGameActive = true;
-            const minutes = parseInt(document.getElementById('minutesInput').value) || 5;
-            const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
-            gameState.timeLeft = minutes * 60 + seconds;
-            
-            gameState.timer = setInterval(() => {
-                gameState.timeLeft--;
-                updateTimer();
-                
-                if (gameState.timeLeft <= 0) {
-                    endGame(false);
-                }
-            }, 1000);
-        }
-
         // 结束游戏
         function endGame(success) {
             gameState.isGameActive = false;
@@ -753,6 +774,9 @@
                 clearInterval(gameState.timer);
                 gameState.timer = null;
             }
+            
+            // 显示导入按钮
+            document.getElementById('importSection').style.display = 'block';
             
             showResultModal(success);
         }
@@ -769,7 +793,7 @@
                 content.className = 'result-content success';
                 icon.textContent = '🎉';
                 title.textContent = '挑战成功！';
-                message.textContent = `恭喜你在规定时间内完成了所有配对！共用时 ${gameState.totalPairs - gameState.matchedPairs} 对。`;
+                message.textContent = `恭喜你在规定时间内完成了所有配对！`;
             } else {
                 content.className = 'result-content failure';
                 icon.textContent = '⏰';
@@ -801,9 +825,14 @@
             }
             
             document.getElementById('resultModal').style.display = 'none';
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').textContent = '开始游戏';
+            
+            // 清空气泡
+            document.getElementById('gameBoard').innerHTML = '';
             
             updateProgress();
-            createBubbles();
+            updateTimer();
         }
 
         // 更新倒计时显示
@@ -888,11 +917,13 @@
             hideImportModal();
             textarea.value = '';
             
-            createBubbles();
+            // 清空气泡，等待开始游戏
+            document.getElementById('gameBoard').innerHTML = '';
+            
             updateProgress();
             
             // 显示成功提示
-            alert(`成功导入 ${newPairs.length} 对知识配对！`);
+            alert(`成功导入 ${newPairs.length} 对知识配对！现在可以点击"开始游戏"按钮开始挑战。`);
         }
 
         // 工具函数：数组随机排序
