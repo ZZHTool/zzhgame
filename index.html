@@ -1102,7 +1102,7 @@
             <div class="time-controls">
                 <div class="time-input-group">
                     <button class="time-btn" onclick="adjustTime('minutes', -1)">-</button>
-                    <input type="number" class="time-input" id="minutesInput" value="5" min="1" max="60">
+                    <input type="number" class="time-input" id="minutesInput" value="3" min="1" max="60">
                     <span>分</span>
                     <button class="time-btn" onclick="adjustTime('minutes', 1)">+</button>
                 </div>
@@ -1166,7 +1166,7 @@
                         <input type="checkbox" class="unit-checkbox" id="unit2Checkbox" checked>
                         <div>
                             <div class="unit-name">Unit2</div>
-                            <div class="unit-count">3 对单词</div>
+                            <div class="unit-count">36 对单词</div>
                         </div>
                     </div>
                     <button class="edit-btn" onclick="editUnit('unit2')">→</button>
@@ -1223,7 +1223,7 @@
             selectedBubble: null,
             matchedPairs: 0,
             totalPairs: 0,
-            timeLeft: 300, // 5分钟
+            timeLeft: 180,
             timer: null,
             isGameActive: false,
             displayedBubbles: [],
@@ -1268,7 +1268,40 @@
             unit2: [
                 ['mind', '聪明人'],
                 ['astronomer', '天文学家'],
-                ['genius', '天才']
+                ['genius', '天才'],
+                ['consider', '认为'],
+                ['sense', '理解力'],
+                ['humour', '幽默'],
+                ['invitation', '邀请'],
+                ['theory', '学说'],
+                ['university', '大学'],
+                ['pleasure', '乐事'],
+                ['avoid', '避免'],
+                ['lecture', '讲座'],
+                ['tonight', '在今晚'],
+                ['audience', '观众'],
+                ['trust', '信任'],
+                ['seat', '座位'],
+                ['applause', '鼓掌'],
+                ['pale', '苍白的'],
+                ['achievement', '成就'],
+                ['universe', '宇宙'],
+                ['philosopher', '哲学家'],
+                ['obey', '遵守'],
+                ['reduce', '减少'],
+                ['exactly', '精确地'],
+                ['action', '情节'],
+                ['sense of humour', '幽默感'],
+                ['let...down', '使......失望'],
+                ['by heart', '单凭记忆；能背诵'],
+                ['take a seat', '坐下'],
+                ['without difficulty', '轻而易举'],
+                ['join in', '参加'],
+                ['have no idea', '丝毫不知道'],
+                ['(be) in trouble', '处于困境'],
+                ['play a joke on sb.', '捉弄某人'],
+                ['turning point', '转折点'],
+                ['a series of', '一系列']
             ]
         };
 
@@ -1408,14 +1441,43 @@
             allItems = shuffleArray(allItems);
 
             // 计算每屏可以显示的气泡数量
-            const bubblesPerScreen = calculateBubblesPerScreen();
+            const bubblesPerScreen = Math.floor(calculateBubblesPerScreen() / 2) * 2;
 
-            // 初始显示的气泡数量（取偶数）
-            const initialBubbleCount = Math.min(bubblesPerScreen, allItems.length);
+            // 确保初始显示的气泡都是成对的
+            let displayedPairs = new Set();
+            let displayedBubbles = [];
+            let remainingBubbles = [...allItems];
 
-            // 分割显示的气泡和剩余的气泡
-            gameState.displayedBubbles = allItems.slice(0, initialBubbleCount);
-            gameState.remainingBubbles = allItems.slice(initialBubbleCount);
+            // 选择完整的气泡对
+            for (let i = 0; i < bubblesPerScreen / 2 && remainingBubbles.length > 0; i++) {
+                // 从剩余气泡中找到一个完整的对
+                for (let j = 0; j < remainingBubbles.length; j++) {
+                    const currentItem = remainingBubbles[j];
+                    if (!displayedPairs.has(currentItem.pairId)) {
+                        // 找到这个对的所有气泡
+                        const pairBubbles = remainingBubbles.filter(item => item.pairId === currentItem.pairId);
+                        if (pairBubbles.length === 2) {
+                            displayedPairs.add(currentItem.pairId);
+                            displayedBubbles.push(...pairBubbles);
+                            // 从剩余气泡中移除这一对
+                            remainingBubbles = remainingBubbles.filter(item => item.pairId !== currentItem.pairId);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 如果还没有足够的气泡，补充单个气泡（但确保成对）
+            if (displayedBubbles.length < bubblesPerScreen) {
+                const needed = bubblesPerScreen - displayedBubbles.length;
+                // 确保补充的数量是偶数
+                const additionalBubbles = remainingBubbles.slice(0, Math.floor(needed / 2) * 2);
+                displayedBubbles = [...displayedBubbles, ...additionalBubbles];
+                remainingBubbles = remainingBubbles.slice(additionalBubbles.length);
+            }
+
+            gameState.displayedBubbles = displayedBubbles;
+            gameState.remainingBubbles = remainingBubbles;
 
             // 显示初始气泡
             showBubbles(gameState.displayedBubbles);
@@ -1449,8 +1511,46 @@
         function addNewBubbles(count) {
             if (gameState.remainingBubbles.length === 0) return;
 
-            // 从剩余气泡中取出指定数量的气泡
-            const newBubbles = gameState.remainingBubbles.splice(0, count);
+            // 确保补充的数量是偶数
+            const evenCount = Math.floor(count / 2) * 2;
+            if (evenCount === 0) return;
+
+            let newBubbles = [];
+            let pairsToAdd = new Set();
+
+            // 优先选择完整的气泡对
+            for (let i = 0; i < evenCount / 2 && gameState.remainingBubbles.length > 0; i++) {
+                // 从剩余气泡中找到一个完整的对
+                for (let j = 0; j < gameState.remainingBubbles.length; j++) {
+                    const currentItem = gameState.remainingBubbles[j];
+                    if (!pairsToAdd.has(currentItem.pairId)) {
+                        // 找到这个对的所有气泡
+                        const pairBubbles = gameState.remainingBubbles.filter(item => item.pairId === currentItem.pairId);
+                        if (pairBubbles.length === 2) {
+                            pairsToAdd.add(currentItem.pairId);
+                            newBubbles.push(...pairBubbles);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 如果还没有足够的气泡，补充单个气泡（但确保成对）
+            if (newBubbles.length < evenCount) {
+                const needed = evenCount - newBubbles.length;
+                const additionalBubbles = gameState.remainingBubbles
+                    .filter(item => !pairsToAdd.has(item.pairId))
+                    .slice(0, Math.floor(needed / 2) * 2);
+                newBubbles = [...newBubbles, ...additionalBubbles];
+            }
+
+            // 从剩余气泡中移除新添加的气泡
+            gameState.remainingBubbles = gameState.remainingBubbles.filter(item =>
+                !newBubbles.some(newItem =>
+                    newItem.text === item.text && newItem.pairId === item.pairId
+                )
+            );
+
             gameState.displayedBubbles = [...gameState.displayedBubbles, ...newBubbles];
 
             // 显示新气泡
@@ -1519,12 +1619,10 @@
                     bubble2.style.display = 'none';
 
                     // 从显示的气泡中移除
-                    const pairId1 = parseInt(bubble1.dataset.pair);
-                    const pairId2 = parseInt(bubble2.dataset.pair);
-
+                    const pairId = parseInt(bubble1.dataset.pair);
                     gameState.displayedBubbles = gameState.displayedBubbles.filter(item =>
-                        !(item.pairId === pairId1 && item.text === bubble1.textContent) &&
-                        !(item.pairId === pairId2 && item.text === bubble2.textContent)
+                        !(item.pairId === pairId &&
+                            (item.text === bubble1.textContent || item.text === bubble2.textContent))
                     );
 
                     // 补充一对新的气泡
