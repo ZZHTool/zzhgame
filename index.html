@@ -482,24 +482,25 @@
         .bubble {
             background: linear-gradient(135deg, #4A90E2, #7ED321);
             color: white;
-            padding: 15px 20px;
-            border-radius: 25px;
-            font-size: 1.2rem;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 1.1rem;
             font-weight: 700;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
             position: relative;
             overflow: hidden;
-            min-height: 80px;
+            min-height: 65px;
             display: flex;
             align-items: center;
             justify-content: center;
             word-wrap: break-word;
             word-break: break-word;
-            width: 200px;
+            width: 160px;
             max-width: 100%;
+            line-height: 1.3;
         }
 
             .bubble::before {
@@ -1042,7 +1043,31 @@
                 align-items: center;
             }
         }
+        /* 平板端调整 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .game-board {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 10px;
+            }
 
+            .bubble {
+                width: 150px;
+                min-height: 60px;
+            }
+        }
+        /* 大屏幕调整 */
+        @media (min-width: 1400px) {
+            .game-board {
+                grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+                gap: 12px;
+                max-width: 1600px;
+            }
+
+            .bubble {
+                width: 170px;
+                min-height: 70px;
+            }
+        }
         /* 游戏进行中的样式 */
         body.game-started .time-controls {
             display: none;
@@ -1329,6 +1354,14 @@
                     showImportModal();
                 }
             });
+
+            // 窗口大小改变时重新布局
+            window.addEventListener('resize', function () {
+                if (gameState.isGameActive) {
+                    // 如果游戏正在进行中，重新创建气泡以适应新的大小
+                    createBubbles();
+                }
+            });
         });
 
         // 初始化游戏
@@ -1348,26 +1381,40 @@
         // 计算每屏可以显示的气泡数量
         function calculateBubblesPerScreen() {
             const gameContainer = document.querySelector('.game-container');
-            const bubbleHeight = 100; // 气泡高度加间距的估算值
-            const availableHeight = gameContainer.clientHeight - 100; // 减去一些边距
+            const gameBoard = document.querySelector('.game-board');
+
+            // 获取实际的气泡高度（包括间距）
+            const bubbleElement = document.querySelector('.bubble');
+            let bubbleHeight = 80; // 默认值
+
+            if (bubbleElement) {
+                const style = window.getComputedStyle(bubbleElement);
+                bubbleHeight = bubbleElement.offsetHeight +
+                    parseInt(style.marginTop) +
+                    parseInt(style.marginBottom) +
+                    parseInt(gameBoard.style.gap || 8);
+            }
+
+            const availableHeight = gameContainer.clientHeight - 40; // 减去一些边距
 
             // 计算每列可以显示的气泡数量
-            const bubblesPerColumn = Math.floor(availableHeight / bubbleHeight);
+            const bubblesPerColumn = Math.max(3, Math.floor(availableHeight / bubbleHeight));
 
             // 根据屏幕宽度计算列数
             const screenWidth = window.innerWidth;
             let columns;
             if (screenWidth < 768) {
-                columns = 2; // 移动端显示2列
+                columns = 3; // 移动端显示3列
             } else if (screenWidth < 1024) {
-                columns = 3; // 平板显示3列
+                columns = 4; // 平板显示4列
+            } else if (screenWidth < 1400) {
+                columns = 5; // 桌面显示5列
             } else {
-                columns = 4; // 桌面显示4列
+                columns = 6; // 大屏幕显示6列
             }
 
             // 计算每屏显示的气泡数量（取偶数，因为要成对显示）
-            const bubblesPerScreen = Math.max(4, Math.floor(bubblesPerColumn * columns / 2) * 2);
-
+            const bubblesPerScreen = Math.max(6, Math.floor(bubblesPerColumn * columns / 2) * 2);
             return bubblesPerScreen;
         }
 
@@ -1730,7 +1777,7 @@
             resultModal.classList.remove('show');
             setTimeout(() => {
                 resultModal.style.display = 'none';
-            }, 300);
+            }, 180);
 
             document.getElementById('startBtn').className = 'start-btn';
             document.getElementById('startBtn').textContent = '开始游戏';
