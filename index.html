@@ -514,38 +514,6 @@
                 transition: opacity 0.3s;
             }
 
-            .bubble:nth-child(8n+1) {
-                background: linear-gradient(135deg, #FF6B9D, #FF8E53);
-            }
-
-            .bubble:nth-child(8n+2) {
-                background: linear-gradient(135deg, #4A90E2, #7ED321);
-            }
-
-            .bubble:nth-child(8n+3) {
-                background: linear-gradient(135deg, #9C27B0, #E91E63);
-            }
-
-            .bubble:nth-child(8n+4) {
-                background: linear-gradient(135deg, #FF9800, #FF5722);
-            }
-
-            .bubble:nth-child(8n+5) {
-                background: linear-gradient(135deg, #009688, #4CAF50);
-            }
-
-            .bubble:nth-child(8n+6) {
-                background: linear-gradient(135deg, #3F51B5, #2196F3);
-            }
-
-            .bubble:nth-child(8n+7) {
-                background: linear-gradient(135deg, #795548, #FFC107);
-            }
-
-            .bubble:nth-child(8n+8) {
-                background: linear-gradient(135deg, #607D8B, #00BCD4);
-            }
-
             .bubble:hover::before {
                 opacity: 1;
             }
@@ -1197,6 +1165,16 @@
                     </div>
                     <button class="edit-btn" onclick="editUnit('unit2')">→</button>
                 </div>
+                <div class="unit-item">
+                    <div class="unit-info">
+                        <input type="checkbox" class="unit-checkbox" id="unit3Checkbox" checked>
+                        <div>
+                            <div class="unit-name">Unit3</div>
+                            <div class="unit-count">24 对单词</div>
+                        </div>
+                    </div>
+                    <button class="edit-btn" onclick="editUnit('unit3')">→</button>
+                </div>
             </div>
 
             <p class="modal-instructions">
@@ -1328,6 +1306,32 @@
                 ['play a joke on sb.', '捉弄某人'],
                 ['turning point', '转折点'],
                 ['a series of', '一系列']
+            ],
+            unit3: [
+                ['meal', '一顿饭'],
+                ['share', '分享'],
+                ['decision', '决定'],
+                ['possessions', '个人财产'],
+                ['expect', '要求；指望'],
+                ['abroad', '在国外'],
+                ['business', '商务'],
+                ['personal', '个人的'],
+                ['set', '安排；设置'],
+                ['daughter', '女儿'],
+                ['mind', '介意'],
+                ['fashionable', '流行的'],
+                ['fashion', '流行款式'],
+                ['out of date', '过时的'],
+                ['iron', '烫平'],
+                ['event', '公开活动'],
+                ['suppose', '认为'],
+                ['relationship', '关系'],
+                ['invite', '邀请'],
+                ['cost', '需付费'],
+                ['type', '类型'],
+                ['help with', '帮着做'],
+                ['(be) on business', '出差'],
+                ['have no interest in', '对......没有兴趣']
             ]
         };
 
@@ -1375,7 +1379,7 @@
 
         // 加载默认单元
         function loadDefaultUnits() {
-            gameState.knowledgePairs = [...defaultUnits.unit1, ...defaultUnits.unit2];
+            gameState.knowledgePairs = [...defaultUnits.unit1, ...defaultUnits.unit2, ...defaultUnits.unit3];
             gameState.totalPairs = gameState.knowledgePairs.length;
             updateProgress();
         }
@@ -1535,11 +1539,32 @@
         function showBubbles(bubbles) {
             const gameBoard = document.getElementById('gameBoard');
 
+            // 预定义的颜色方案
+            const colorSchemes = [
+                'linear-gradient(135deg, #FF6B9D, #FF8E53)',
+                'linear-gradient(135deg, #4A90E2, #7ED321)',
+                'linear-gradient(135deg, #9C27B0, #E91E63)',
+                'linear-gradient(135deg, #FF9800, #FF5722)',
+                'linear-gradient(135deg, #009688, #4CAF50)',
+                'linear-gradient(135deg, #3F51B5, #2196F3)',
+                'linear-gradient(135deg, #795548, #FFC107)',
+                'linear-gradient(135deg, #607D8B, #00BCD4)',
+                'linear-gradient(135deg, #E74C3C, #F39C12)',
+                'linear-gradient(135deg, #8E44AD, #3498DB)',
+                'linear-gradient(135deg, #16A085, #27AE60)',
+                'linear-gradient(135deg, #2C3E50, #34495E)'
+            ];
+
             bubbles.forEach((item, index) => {
                 const bubble = document.createElement('div');
                 bubble.className = 'bubble';
                 bubble.textContent = item.text;
                 bubble.dataset.pair = item.pairId;
+
+                // 随机分配颜色
+                const randomColorIndex = Math.floor(Math.random() * colorSchemes.length);
+                bubble.style.background = colorSchemes[randomColorIndex];
+
                 bubble.onclick = () => selectBubble(bubble);
                 gameBoard.appendChild(bubble);
 
@@ -1913,8 +1938,10 @@
             // 更新单元计数显示
             if (currentEditingUnit === 'unit1') {
                 document.querySelector('.unit-item:nth-child(1) .unit-count').textContent = `${newPairs.length} 对单词`;
-            } else {
+            } else if (currentEditingUnit === 'unit2') {
                 document.querySelector('.unit-item:nth-child(2) .unit-count').textContent = `${newPairs.length} 对单词`;
+            } else if (currentEditingUnit === 'unit3') {
+                document.querySelector('.unit-item:nth-child(3) .unit-count').textContent = `${newPairs.length} 对单词`;
             }
 
             hideEditModal();
@@ -1927,6 +1954,7 @@
         function importKnowledge() {
             const unit1Checked = document.getElementById('unit1Checkbox').checked;
             const unit2Checked = document.getElementById('unit2Checkbox').checked;
+            const unit3Checked = document.getElementById('unit3Checkbox').checked;
             const manualText = document.getElementById('importTextarea').value.trim();
 
             let newPairs = [];
@@ -1937,6 +1965,9 @@
             }
             if (unit2Checked) {
                 newPairs = [...newPairs, ...defaultUnits.unit2];
+            }
+            if (unit3Checked) {
+                newPairs = [...newPairs, ...defaultUnits.unit3];
             }
 
             // 添加手动输入的内容
