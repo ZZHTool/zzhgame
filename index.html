@@ -1872,6 +1872,12 @@
                 updateTimer();
             }
         }
+        // 重置计时器样式
+        const timerDisplay = document.getElementById('timerDisplay');
+        timerDisplay.style.color = '';
+        timerDisplay.style.background = 'linear-gradient(135deg, #4A90E2, #7ED321)';
+        timerDisplay.style.webkitBackgroundClip = 'text';
+        timerDisplay.style.webkitTextFillColor = 'transparent';
 
         // 显示结果对话框
         function showResultModal(success) {
@@ -1957,6 +1963,13 @@
             const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
             gameState.timeLeft = minutes * 60 + seconds;
 
+            // 重置计时器样式
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.style.color = '';
+            timerDisplay.style.background = 'linear-gradient(135deg, #4A90E2, #7ED321)';
+            timerDisplay.style.webkitBackgroundClip = 'text';
+            timerDisplay.style.webkitTextFillColor = 'transparent';
+
             updateProgress();
             updateTimer();
         }
@@ -1965,8 +1978,28 @@
         function updateTimer() {
             const minutes = Math.floor(gameState.timeLeft / 60);
             const seconds = gameState.timeLeft % 60;
-            document.getElementById('timerDisplay').textContent =
+            const timerDisplay = document.getElementById('timerDisplay');
+            timerDisplay.textContent =
                 `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            // 计算总时间和剩余百分比
+            const minutesInput = parseInt(document.getElementById('minutesInput').value) || 0;
+            const secondsInput = parseInt(document.getElementById('secondsInput').value) || 0;
+            const totalTime = minutesInput * 60 + secondsInput;
+
+            // 如果剩余时间少于总时间的10%，显示红色警告
+            if (totalTime > 0 && gameState.timeLeft / totalTime <= 0.1) {
+                timerDisplay.style.color = '#FF0000';
+                timerDisplay.style.background = 'linear-gradient(135deg, #FF0000, #FF6B6B)';
+                timerDisplay.style.webkitBackgroundClip = 'text';
+                timerDisplay.style.webkitTextFillColor = 'transparent';
+            } else {
+                // 恢复原始样式
+                timerDisplay.style.color = '';
+                timerDisplay.style.background = 'linear-gradient(135deg, #4A90E2, #7ED321)';
+                timerDisplay.style.webkitBackgroundClip = 'text';
+                timerDisplay.style.webkitTextFillColor = 'transparent';
+            }
         }
 
         // 更新进度
