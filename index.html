@@ -1054,31 +1054,85 @@
             position: static;
             transform: none;
         }
+
+        /* 音效控制区域 */
+        .audio-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+
+        .audio-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+            .audio-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+
+            .audio-btn.muted {
+                background: rgba(255, 107, 157, 0.2);
+                color: #FF6B9D;
+            }
     </style>
 </head>
 <body>
     <audio id="bgMusic" loop>
         <source src="Summer.mp3" type="audio/mp3">
     </audio>
+    <audio id="clickSound" preload="auto">
+        <source src="click.mp3" type="audio/mp3">
+    </audio>
+    <audio id="matchSound" preload="auto">
+        <source src="match.mp3" type="audio/mp3">
+    </audio>
+    <audio id="winSound" preload="auto">
+        <source src="win.mp3" type="audio/mp3">
+    </audio>
+    <audio id="loseSound" preload="auto">
+        <source src="lose.mp3" type="audio/mp3">
+    </audio>
+    <audio id="wrongSound" preload="auto">
+        <source src="wrong.mp3" type="audio/mp3">
+    </audio>
     <!-- 加载动画 -->
     <div class="loader">
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">	
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
             <h1 style="font-size: 2.5rem; margin-bottom: 20px; color: white; text-align: center; background: linear-gradient(45deg, #00ff88, #ffd900, #ff003c); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">课堂知识消消乐</h1>
-        <div class="loader-inner">
-            <div class="loader-line-wrap">
-                <div class="loader-line"></div>
+            <div class="loader-inner">
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
+                <div class="loader-line-wrap">
+                    <div class="loader-line"></div>
+                </div>
             </div>
-            <div class="loader-line-wrap">
-                <div class="loader-line"></div>
-            </div>
-            <div class="loader-line-wrap">
-                <div class="loader-line"></div>
-            </div>
+            <div style="font-size: 1rem; color: white; opacity: 0.8; margin-top: 30px; text-align: center;">&copy; 2025 ZZH.</div>
         </div>
-       <div style="font-size: 1rem; color: white; opacity: 0.8; margin-top: 30px; text-align: center;">&copy; 2025 ZZH.</div>
-      </div>
     </div>
-
+    <!-- 音效控制按钮 -->
+    <div class="audio-controls">
+        <button class="audio-btn" id="bgMusicToggle" onclick="toggleBackgroundMusic()">🎵</button>
+        <button class="audio-btn" id="sfxToggle" onclick="toggleSoundEffects()">🔊</button>
+    </div>
     <!-- 背景装饰 -->
     <div class="bg-decoration">
         <div class="floating-shape">⭐</div>
@@ -1101,7 +1155,7 @@
             <div class="time-controls">
                 <div class="time-input-group">
                     <button class="time-btn" onclick="adjustTime('minutes', -1)">-</button>
-                    <input type="number" class="time-input" id="minutesInput" value="3" min="1" max="60">
+                    <input type="number" class="time-input" id="minutesInput" value="3" min="0" max="60">
                     <span>分</span>
                     <button class="time-btn" onclick="adjustTime('minutes', 1)">+</button>
                 </div>
@@ -1137,7 +1191,7 @@
     <section class="import-section" id="importSection">
         <button class="import-btn" onclick="showImportModal()">📚 导入知识</button>
         <div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9rem; opacity: 0.7;">
-        &copy; 2025 ZZH.
+            &copy; 2025 ZZH.
         </div>
     </section>
 
@@ -1240,7 +1294,10 @@
             displayedBubbles: [],
             remainingBubbles: []
         };
-
+        let audioState = {
+            bgMusicEnabled: true,
+            soundEffectsEnabled: true
+        };
         // 默认单元数据 - 更新为完整的词组
         const defaultUnits = {
             unit1: [
@@ -1341,6 +1398,45 @@
                 ['have no interest in', '对......没有兴趣']
             ]
         };
+        // 播放音效函数
+        function playSound(soundId) {
+            if (!audioState.soundEffectsEnabled) return;
+
+            const sound = document.getElementById(soundId);
+            if (sound) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log('音效播放失败:', e));
+            }
+        }
+
+        // 切换背景音乐
+        function toggleBackgroundMusic() {
+            const bgMusic = document.getElementById('bgMusic');
+            const toggleBtn = document.getElementById('bgMusicToggle');
+
+            audioState.bgMusicEnabled = !audioState.bgMusicEnabled;
+
+            if (audioState.bgMusicEnabled) {
+                bgMusic.play().catch(e => console.log('背景音乐播放失败:', e));
+                toggleBtn.classList.remove('muted');
+            } else {
+                bgMusic.pause();
+                toggleBtn.classList.add('muted');
+            }
+        }
+
+        // 切换音效
+        function toggleSoundEffects() {
+            const toggleBtn = document.getElementById('sfxToggle');
+
+            audioState.soundEffectsEnabled = !audioState.soundEffectsEnabled;
+
+            if (audioState.soundEffectsEnabled) {
+                toggleBtn.classList.remove('muted');
+            } else {
+                toggleBtn.classList.add('muted');
+            }
+        }
 
         // 当前编辑的单元
         let currentEditingUnit = '';
@@ -1353,10 +1449,10 @@
                 setTimeout(() => {
                     document.querySelector('.loader').remove();
                 }, 800);
-            }, 1000);
+            }, 2000);
 
             initGame();
-            
+
             // 添加键盘快捷键
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
@@ -1367,7 +1463,21 @@
                     showImportModal();
                 }
             });
+            // 初始化音效状态
+            const bgMusicToggle = document.getElementById('bgMusicToggle');
+            const sfxToggle = document.getElementById('sfxToggle');
 
+            if (audioState.bgMusicEnabled) {
+                bgMusicToggle.classList.remove('muted');
+            } else {
+                bgMusicToggle.classList.add('muted');
+            }
+
+            if (audioState.soundEffectsEnabled) {
+                sfxToggle.classList.remove('muted');
+            } else {
+                sfxToggle.classList.add('muted');
+            }
             // 窗口大小改变时重新布局
             window.addEventListener('resize', function () {
                 if (gameState.isGameActive) {
@@ -1461,7 +1571,7 @@
             // 添加游戏开始样式类
             document.body.classList.add('game-started');
 
-            const minutes = parseInt(document.getElementById('minutesInput').value) || 5;
+            const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
             const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
             gameState.timeLeft = minutes * 60 + seconds;
 
@@ -1643,6 +1753,8 @@
 
             if (bubble.classList.contains('matched')) return;
 
+            playSound('clickSound');
+
             if (gameState.selectedBubble === null) {
                 // 第一次选择
                 gameState.selectedBubble = bubble;
@@ -1678,7 +1790,7 @@
         function matchBubbles(bubble1, bubble2) {
             bubble1.classList.add('matched');
             bubble2.classList.add('matched');
-
+            playSound('matchSound');
             if (gameState.selectedBubble) {
                 gameState.selectedBubble.classList.remove('selected');
                 gameState.selectedBubble = null;
@@ -1720,7 +1832,7 @@
         function wrongMatch(bubble1, bubble2) {
             bubble1.classList.add('wrong');
             bubble2.classList.add('wrong');
-
+            playSound('wrongSound');
             setTimeout(() => {
                 bubble1.classList.remove('selected', 'wrong');
                 bubble2.classList.remove('wrong');
@@ -1753,7 +1865,10 @@
                 showResultModal(success);
             } else {
                 document.getElementById('gameBoard').innerHTML = '';
-                gameState.timeLeft = 300;
+                // 恢复用户设定的时间
+                const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+                const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+                gameState.timeLeft = minutes * 60 + seconds;
                 updateTimer();
             }
         }
@@ -1765,17 +1880,33 @@
             const icon = document.getElementById('resultIcon');
             const title = document.getElementById('resultTitle');
             const message = document.getElementById('resultMessage');
-
+            // 暂停背景音乐
+            const bgMusic = document.getElementById('bgMusic');
+            bgMusic.pause();
             if (success) {
+                playSound('winSound');
                 content.className = 'result-content success';
                 icon.textContent = '🎉';
                 title.textContent = '挑战成功！';
                 message.textContent = `恭喜你在规定时间内完成了所有配对！`;
+                setTimeout(() => {
+                    if (audioState.bgMusicEnabled) {
+                        bgMusic.currentTime = 0;
+                        bgMusic.play().catch(e => console.log('背景音乐播放失败:', e));
+                    }
+                }, 3000);
             } else {
+                playSound('loseSound');
                 content.className = 'result-content failure';
                 icon.textContent = '⏰';
                 title.textContent = '挑战失败';
                 message.textContent = `时间到了！还剩下 ${gameState.totalPairs - gameState.matchedPairs} 对未完成。`;
+                setTimeout(() => {
+                    if (audioState.bgMusicEnabled) {
+                        bgMusic.currentTime = 0;
+                        bgMusic.play().catch(e => console.log('背景音乐播放失败:', e));
+                    }
+                }, 1500);
             }
 
             modal.style.display = 'block';
@@ -1790,7 +1921,6 @@
                 easing: 'easeOutBounce'
             });
             document.getElementById('gameBoard').innerHTML = '';
-            gameState.timeLeft = 300;
             updateTimer();
         }
 
@@ -1822,6 +1952,11 @@
             // 清空气泡
             document.getElementById('gameBoard').innerHTML = '';
 
+            // 恢复用户设定的时间，而不是固定3分钟
+            const minutes = parseInt(document.getElementById('minutesInput').value) || 0;
+            const seconds = parseInt(document.getElementById('secondsInput').value) || 0;
+            gameState.timeLeft = minutes * 60 + seconds;
+
             updateProgress();
             updateTimer();
         }
@@ -1851,7 +1986,7 @@
             let value = parseInt(input.value) + delta;
 
             if (type === 'minutes') {
-                value = Math.max(1, Math.min(60, value));
+                value = Math.max(0, Math.min(60, value));
             } else {
                 value = Math.max(0, Math.min(59, value));
             }
