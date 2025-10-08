@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="ZZH">
     <title>课堂知识消消乐</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="ZZH.ico" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
     <style>
         * {
@@ -1553,7 +1555,9 @@
         // 开始游戏
         function startGame() {
             if (gameState.isGameActive) return;
-            document.getElementById('bgMusic').play();
+            if (audioState.bgMusicEnabled) {
+                document.getElementById('bgMusic').play();
+            }
             // 检查是否有知识对
             if (gameState.knowledgePairs.length === 0) {
                 alert('请先导入知识点！');
